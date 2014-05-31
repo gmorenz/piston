@@ -116,7 +116,7 @@ impl AssetStore {
 
         self.texture_files.insert(file.to_string(), texture_id);
         Ok(Image {
-            texture_id: texture_id,
+            texture_id: id as uint,
             texture_width: texture.width,
             texture_height: texture.height,
             source_rect: [0, 0, texture.width, texture.height],

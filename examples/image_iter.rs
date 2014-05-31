@@ -47,7 +47,7 @@ fn main() {
             Some(e) => match e {
                 Render(args) => {
                     let c = Context::abs(args.width as f64, args.height as f64);
-                    let mut gl = Gl::new(args.gl_data, &mut asset_store);
+                    let mut gl = Gl::new(args.gl_data);
                     c.image(image).draw(&mut gl);
                 },
                 _ => {},       

@@ -181,7 +181,7 @@ pub trait Game {
             let (w, h) = game_window.get_size();
             if w != 0 && h != 0 {
                 self.viewport(game_window);
-                let mut gl = Gl::new(&mut gl_data, asset_store);
+                let mut gl = Gl::new(&mut gl_data);
                 bg.clear(&mut gl);
                 // Extrapolate time forward to allow smooth motion.
                 // 'now' is always bigger than 'last_update'.

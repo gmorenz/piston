@@ -13,7 +13,7 @@ use shader_utils::{compile_shader};
 use BackEnd = graphics::BackEnd;
 
 // Local crate.
-use AssetStore;
+
 
 static VERTEX_SHADER_TRI_LIST_XY_RGBA: &'static str = "
 attribute vec4 a_v4Position;
@@ -70,18 +70,13 @@ void main()
 /// OpenGL back-end for Rust-Graphics.
 pub struct Gl<'a> {
     gl_data: &'a mut GlData,
-    asset_store: &'a AssetStore,
 }
 
 impl<'a> Gl<'a> {
     /// Creates a new OpenGl back-end.
-    pub fn new(
-        gl_data: &'a mut GlData,
-        asset_store: &'a AssetStore
-    ) -> Gl<'a> {
+    pub fn new( gl_data: &'a mut GlData ) -> Gl<'a> {
         Gl {
             gl_data: gl_data,
-            asset_store: asset_store,
         }
     }
 }
@@ -240,9 +235,8 @@ impl<'a> BackEnd for Gl<'a> {
 
     fn supports_single_texture(&self) -> bool { true }
 
-    fn enable_single_texture(&mut self, texture_id: uint) {
-        let texture = self.asset_store.get_texture(texture_id);
-        gl::BindTexture(gl::TEXTURE_2D, texture);
+    fn enable_single_texture(&mut self, texture: uint) {
+        gl::BindTexture(gl::TEXTURE_2D, texture as GLuint);
     }
 
     fn disable_single_texture(&mut self) {}
