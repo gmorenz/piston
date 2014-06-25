@@ -1,7 +1,6 @@
 //! Game loop.
 
 // Local crate.
-use GameEvent;
 use GameWindow = game_window::GameWindow;
 use GameIteratorSettings;
 use GameIterator;
@@ -55,20 +54,6 @@ pub trait Game {
     /// Moved mouse relative, not bounded by cursor.
     fn mouse_relative_move(&mut self, _args: &MouseRelativeMoveArgs) {}
 
-    /// Handles a game event.
-    fn event(&mut self, event: &mut GameEvent) {
-        match *event {
-            Render(ref mut args) => self.render(args),
-            Update(ref mut args) => self.update(args),
-            KeyPress(ref args) => self.key_press(args),
-            KeyRelease(ref args) => self.key_release(args),
-            MousePress(ref args) => self.mouse_press(args),
-            MouseRelease(ref args) => self.mouse_release(args),
-            MouseMove(ref args) => self.mouse_move(args),
-            MouseRelativeMove(ref args) => self.mouse_relative_move(args),
-        }
-    }
-
     /// Executes a game loop.
     fn run<W: GameWindow>(
         &mut self,
@@ -85,7 +70,16 @@ pub trait Game {
         loop {
             match game_iter.next() {
                 None => break,
-                Some(mut e) => self.event(&mut e)
+                Some(mut e) => match e {
+                    Render(ref mut args) => self.render(args),
+                    Update(ref mut args) => self.update(args),
+                    KeyPress(ref args) => self.key_press(args),
+                    KeyRelease(ref args) => self.key_release(args),
+                    MousePress(ref args) => self.mouse_press(args),
+                    MouseRelease(ref args) => self.mouse_release(args),
+                    MouseMove(ref args) => self.mouse_move(args),
+                    MouseRelativeMove(ref args) => self.mouse_relative_move(args),
+                }
             }
         }
     }
