@@ -1,5 +1,8 @@
 //! Game loop.
 
+// Extern crate.
+use std::mem::replace;
+
 // Local crate.
 use GameWindow = game_window::GameWindow;
 use GameIteratorSettings;
@@ -22,9 +25,9 @@ use Update;
 use UpdateArgs;
 
 /// Implemented by game applications.
-pub trait Game {
+pub trait Game<R>: Copy {
     /// Render graphics.
-    fn render(&mut self, _args: &mut RenderArgs) {}
+    fn render(&mut self, _resouces: &mut R, _args: &mut RenderArgs) {}
 
     /// Update the physical state of the game.
     fn update(&mut self, _args: &mut UpdateArgs) {}
@@ -56,9 +59,10 @@ pub trait Game {
 
     /// Executes a game loop.
     fn run<W: GameWindow>(
-        &mut self,
+        mut self,
         game_window: &mut W,
-        game_iter_settings: &GameIteratorSettings
+        game_iter_settings: &GameIteratorSettings,
+        render_resources: &mut R
     ) {
         let mut game_iter = GameIterator::new(
             game_window,
@@ -67,11 +71,16 @@ pub trait Game {
 
         self.load();
 
+        let mut buf2 = self;
+
         loop {
             match game_iter.next() {
                 None => break,
                 Some(mut e) => match e {
-                    Render(ref mut args) => self.render(args),
+                    Render(ref mut args) => {    
+                        replace( &mut buf2, self );
+                        buf2.render(render_resources, args);
+                    },
                     Update(ref mut args) => self.update(args),
                     KeyPress(ref args) => self.key_press(args),
                     KeyRelease(ref args) => self.key_release(args),
