@@ -191,7 +191,11 @@ impl<'a, W: GameWindow> GameIterator<'a, W> {
                 let (w, h) = self.game_window.get_size();
                 if w != 0 && h != 0 {
                     // Swap buffers next time.
-//                    self.state = SwapBuffersState;
+                    // self.state = SwapBuffersState;
+ 
+                    // Replacement for swap buffer
+                    self.state = PrepareUpdateLoopState;
+
                     return Some(Render(RenderArgs {
                             // Extrapolate time forward to allow smooth motion.
                             // 'start_render' is always bigger than 'last_update'.

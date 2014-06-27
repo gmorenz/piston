@@ -74,7 +74,7 @@ pub trait Game<R: Send>: Copy + Send {
         self.load();
 
 //        let mut buf2 = self;
-        let (tx, rx) = channel();
+        let (tx, rx) = sync_channel(0);
 
         // Everything but render thread
         spawn(proc() {
@@ -98,10 +98,7 @@ pub trait Game<R: Send>: Copy + Send {
                             //buf2.render(render_resources, args);
                         },
                         Update(ref mut args) => buf2.update(args),
-                        KeyPress(ref args) => {
-                            buf2.key_press(args);
-                            println!("keypress");
-                        },
+                        KeyPress(ref args) => buf2.key_press(args),
                         KeyRelease(ref args) => buf2.key_release(args),
                         MousePress(ref args) => buf2.mouse_press(args),
                         MouseRelease(ref args) => buf2.mouse_release(args),
@@ -116,7 +113,7 @@ pub trait Game<R: Send>: Copy + Send {
 
         loop {
             let (mut buf2, mut args): (Self, RenderArgs) = rx.recv();
-            println!("{:?}\n", buf2);
+            // println!("{:?}\n", buf2);
             buf2.render( &mut render_resources, &mut args);
             graphics_window.swap_buffers();
         }
