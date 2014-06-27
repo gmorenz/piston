@@ -4,7 +4,7 @@ use event;
 use game_window_settings::GameWindowSettings;
 
 /// Implemented by window back-end.
-pub trait GameWindow {
+pub trait GameWindow: Send {
     /// Get the window's settings.
     fn get_settings<'a>(&'a self) -> &'a GameWindowSettings;
 

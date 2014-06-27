@@ -60,50 +60,54 @@ pub trait Game<R: Send>: Copy + Send {
     /// Executes a game loop.
     fn run<W: GameWindow>(
         mut self,
-        game_window: &mut W,
-        game_iter_settings: &GameIteratorSettings,
+        game_window: W,
+        game_iter_settings: GameIteratorSettings,
         mut render_resources: R
     ) {
-        let mut game_iter = GameIterator::new(
-            game_window,
-            game_iter_settings
-        );
 
         self.load();
 
 //        let mut buf2 = self;
         let (tx, rx) = channel();
 
-        // Render Thread
-
+        // Everything but render thread
         spawn(proc() {
-            let mut resources = render_resources;
+            let mut buf2 = self;
+            let mut game_window = game_window;
+
+            let mut game_iter = GameIterator::new(
+                &mut game_window,
+                &game_iter_settings
+            );
+
             loop {
-                let (mut buf2, mut args): (Self, RenderArgs) = rx.recv();
-                buf2.render( &mut resources, &mut args);
+                match game_iter.next() {
+                    None => break,
+                    Some(mut e) => match e {
+                        Render(ref mut args) => {    
+                            
+                            //let (n, no): (int, int) = (self, args);
+                            tx.send((self, args.clone()));
+                            //replace( &mut buf2, self );
+                            //buf2.render(render_resources, args);
+                        },
+                        Update(ref mut args) => buf2.update(args),
+                        KeyPress(ref args) => buf2.key_press(args),
+                        KeyRelease(ref args) => buf2.key_release(args),
+                        MousePress(ref args) => buf2.mouse_press(args),
+                        MouseRelease(ref args) => buf2.mouse_release(args),
+                        MouseMove(ref args) => buf2.mouse_move(args),
+                        MouseRelativeMove(ref args) => buf2.mouse_relative_move(args),
+                    }
+                }
             }
         });
 
-        loop {
-            match game_iter.next() {
-                None => break,
-                Some(mut e) => match e {
-                    Render(ref mut args) => {    
+        // Render Thread
 
-                        //let (n, no): (int, int) = (self, args);
-                        tx.send((self, args.clone()));
-                        //replace( &mut buf2, self );
-                        //buf2.render(render_resources, args);
-                    },
-                    Update(ref mut args) => self.update(args),
-                    KeyPress(ref args) => self.key_press(args),
-                    KeyRelease(ref args) => self.key_release(args),
-                    MousePress(ref args) => self.mouse_press(args),
-                    MouseRelease(ref args) => self.mouse_release(args),
-                    MouseMove(ref args) => self.mouse_move(args),
-                    MouseRelativeMove(ref args) => self.mouse_relative_move(args),
-                }
-            }
+        loop {
+            let (mut buf2, mut args): (Self, RenderArgs) = rx.recv();
+            buf2.render( &mut render_resources, &mut args);
         }
     }
 }
