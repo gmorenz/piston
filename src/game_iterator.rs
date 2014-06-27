@@ -10,7 +10,7 @@ use event;
 pub struct RenderArgs {
     /// Extrapolated time in seconds, used to do smooth animation.
     pub ext_dt: f64,
-    /// OpenGL back-end for Rust-Graphics.
+    /// The width of rendered area.
     pub width: u32,
     /// The height of rendered area.
     pub height: u32,
@@ -102,7 +102,6 @@ impl GameEvent {
 
 enum GameIteratorState {
     RenderState,
-//    SwapBuffersState,
     PrepareUpdateLoopState,
     UpdateLoopState,
     HandleEventsState,
@@ -160,8 +159,13 @@ static billion: u64 = 1_000_000_000;
 impl<'a, W: GameWindow> GameIterator<'a, W> {
     /// Creates a new game iterator.
     pub fn new(game_window: &'a mut W, settings: &GameIteratorSettings) -> GameIterator<'a, W> {
-        let updates_per_second: u64 = settings.updates_per_second;
-        let max_frames_per_second: u64 = settings.max_frames_per_second;
+        let GameIteratorSettings {
+            updates_per_second,
+            max_frames_per_second,
+        } = *settings;
+        
+//        let updates_per_second: u64 = settings.updates_per_second;
+//        let max_frames_per_second: u64 = settings.max_frames_per_second;
 
         let start = time::precise_time_ns();
         GameIterator {
@@ -189,10 +193,7 @@ impl<'a, W: GameWindow> GameIterator<'a, W> {
                 // Rendering code
                 let (w, h) = self.game_window.get_size();
                 if w != 0 && h != 0 {
-                    // Swap buffers next time.
-                    // self.state = SwapBuffersState;
- 
-                    // Replacement for swap buffer
+                    // If we are going to swap buffers, put it here.
                     self.state = PrepareUpdateLoopState;
 
                     return Some(Render(RenderArgs {
@@ -209,11 +210,6 @@ impl<'a, W: GameWindow> GameIterator<'a, W> {
                 self.state = PrepareUpdateLoopState;
                 return self.next();
             },
-/*            SwapBuffersState => {
-                self.game_window.swap_buffers();
-                self.state = PrepareUpdateLoopState;
-                return self.next();
-            },*/
             PrepareUpdateLoopState => {
                 self.updated = 0;
                 self.next_render = self.start_render + self.min_ns_per_frame;

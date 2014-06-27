@@ -2,7 +2,7 @@
 
 //extern crate debug;
 
-// Extern crate.
+// External crate.
 use std::mem::replace;
 use sync::{Mutex, Arc};
 
@@ -31,12 +31,12 @@ use Update;
 use UpdateArgs;
 
 /// Implemented by game applications.
-pub trait Game<R: Send>: Copy + Send {
+pub trait Game<R>: Copy + Send {
     /// Render graphics.
-    fn render(&mut self, _resouces: &mut R, _args: &mut RenderArgs) {}
+    fn render(&self, _resouces: &mut R, _args: &RenderArgs) {}
 
     /// Update the physical state of the game.
-    fn update(&mut self, _args: &mut UpdateArgs) {}
+    fn update(&mut self, _args: &UpdateArgs) {}
 
     /// Perform tasks for loading before showing anything.
     fn load(&mut self) {}
@@ -80,6 +80,7 @@ pub trait Game<R: Send>: Copy + Send {
         let (tx, rx) = channel();
 
         // Everything but render thread
+
         spawn(proc() {
             let mut buf2 = self;
             let mut game_window = event_window;
@@ -101,8 +102,6 @@ pub trait Game<R: Send>: Copy + Send {
                             }
                             mutex_guard.cond.signal();
                             tx.send(args);
-                            //replace( &mut buf2, self );
-                            //buf2.render(render_resources, args);
                         },
                         Update(ref mut args) => buf2.update(args),
                         KeyPress(ref args) => buf2.key_press(args),
