@@ -90,10 +90,10 @@ pub trait Game<R: Send>: Copy + Send {
                 match game_iter.next() {
                     None => break,
                     Some(mut e) => match e {
-                        Render(ref mut args) => {    
+                        Render(args) => {    
                             
                             //let (n, no): (int, int) = (self, args);
-                            tx.send((buf2, args.clone()));
+                            tx.send((buf2, args));
                             //replace( &mut buf2, self );
                             //buf2.render(render_resources, args);
                         },
