@@ -7,6 +7,7 @@ use mouse;
 use event;
 
 /// Render argument.
+#[deriving(Clone)]
 pub struct RenderArgs<'a> {
     /// Extrapolated time in seconds, used to do smooth animation.
     pub ext_dt: f64,

@@ -25,7 +25,7 @@ use Update;
 use UpdateArgs;
 
 /// Implemented by game applications.
-pub trait Game<R>: Copy {
+pub trait Game<R: Send>: Copy + Send {
     /// Render graphics.
     fn render(&mut self, _resouces: &mut R, _args: &mut RenderArgs) {}
 
@@ -62,7 +62,7 @@ pub trait Game<R>: Copy {
         mut self,
         game_window: &mut W,
         game_iter_settings: &GameIteratorSettings,
-        render_resources: &mut R
+        mut render_resources: R
     ) {
         let mut game_iter = GameIterator::new(
             game_window,
@@ -71,15 +71,29 @@ pub trait Game<R>: Copy {
 
         self.load();
 
-        let mut buf2 = self;
+//        let mut buf2 = self;
+        let (tx, rx) = channel();
+
+        // Render Thread
+
+        spawn(proc() {
+            let mut resources = render_resources;
+            loop {
+                let (mut buf2, mut args): (Self, RenderArgs) = rx.recv();
+                buf2.render( &mut resources, &mut args);
+            }
+        });
 
         loop {
             match game_iter.next() {
                 None => break,
                 Some(mut e) => match e {
                     Render(ref mut args) => {    
-                        replace( &mut buf2, self );
-                        buf2.render(render_resources, args);
+
+                        //let (n, no): (int, int) = (self, args);
+                        tx.send((self, args.clone()));
+                        //replace( &mut buf2, self );
+                        //buf2.render(render_resources, args);
                     },
                     Update(ref mut args) => self.update(args),
                     KeyPress(ref args) => self.key_press(args),
