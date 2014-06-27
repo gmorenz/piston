@@ -13,7 +13,7 @@ extern crate gl;
 extern crate time;
 
 extern crate debug;
-
+extern crate sync;
 
 pub use Game = game::Game;
 

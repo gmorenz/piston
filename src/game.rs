@@ -4,6 +4,7 @@
 
 // Extern crate.
 use std::mem::replace;
+use sync::{Mutex, Arc};
 
 // Local crate.
 use game_window::{
@@ -73,8 +74,10 @@ pub trait Game<R: Send>: Copy + Send {
 
         self.load();
 
-//        let mut buf2 = self;
-        let (tx, rx) = sync_channel(0);
+        let mutex_self = Arc::new( Mutex::new( self ) );
+        let mutex_self2 = mutex_self.clone();
+
+        let (tx, rx) = channel();
 
         // Everything but render thread
         spawn(proc() {
@@ -91,9 +94,13 @@ pub trait Game<R: Send>: Copy + Send {
                     None => break,
                     Some(mut e) => match e {
                         Render(args) => {    
-                            
-                            //let (n, no): (int, int) = (self, args);
-                            tx.send((buf2, args));
+                            let mut mutex_guard = mutex_self2.lock();
+                            {
+                                let render_buf = mutex_guard.deref_mut();
+                                replace( render_buf, buf2 );
+                            }
+                            mutex_guard.cond.signal();
+                            tx.send(args);
                             //replace( &mut buf2, self );
                             //buf2.render(render_resources, args);
                         },
@@ -112,10 +119,14 @@ pub trait Game<R: Send>: Copy + Send {
         // Render Thread
 
         loop {
-            let (mut buf2, mut args): (Self, RenderArgs) = rx.recv();
-            // println!("{:?}\n", buf2);
-            buf2.render( &mut render_resources, &mut args);
-            graphics_window.swap_buffers();
+            let mut args: RenderArgs = rx.recv();
+            let mut mutex_guard = mutex_self.lock();
+            {
+                let render_buf = mutex_guard.deref_mut();
+                render_buf.render( &mut render_resources, &mut args);
+                graphics_window.swap_buffers();
+            }
+            mutex_guard.cond.signal();
         }
     }
 }
