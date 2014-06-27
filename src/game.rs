@@ -1,10 +1,15 @@
 //! Game loop.
 
+//extern crate debug;
+
 // Extern crate.
 use std::mem::replace;
 
 // Local crate.
-use GameWindow = game_window::GameWindow;
+use game_window::{
+    GraphicsWindow,
+    GameWindow,
+};
 use GameIteratorSettings;
 use GameIterator;
 use KeyPress;
@@ -58,9 +63,10 @@ pub trait Game<R: Send>: Copy + Send {
     fn mouse_relative_move(&mut self, _args: &MouseRelativeMoveArgs) {}
 
     /// Executes a game loop.
-    fn run<W: GameWindow>(
+    fn run<EW: GameWindow, GW: GraphicsWindow> (
         mut self,
-        game_window: W,
+        event_window: EW,
+        graphics_window: GW,
         game_iter_settings: GameIteratorSettings,
         mut render_resources: R
     ) {
@@ -73,7 +79,7 @@ pub trait Game<R: Send>: Copy + Send {
         // Everything but render thread
         spawn(proc() {
             let mut buf2 = self;
-            let mut game_window = game_window;
+            let mut game_window = event_window;
 
             let mut game_iter = GameIterator::new(
                 &mut game_window,
@@ -87,12 +93,15 @@ pub trait Game<R: Send>: Copy + Send {
                         Render(ref mut args) => {    
                             
                             //let (n, no): (int, int) = (self, args);
-                            tx.send((self, args.clone()));
+                            tx.send((buf2, args.clone()));
                             //replace( &mut buf2, self );
                             //buf2.render(render_resources, args);
                         },
                         Update(ref mut args) => buf2.update(args),
-                        KeyPress(ref args) => buf2.key_press(args),
+                        KeyPress(ref args) => {
+                            buf2.key_press(args);
+                            println!("keypress");
+                        },
                         KeyRelease(ref args) => buf2.key_release(args),
                         MousePress(ref args) => buf2.mouse_press(args),
                         MouseRelease(ref args) => buf2.mouse_release(args),
@@ -107,7 +116,9 @@ pub trait Game<R: Send>: Copy + Send {
 
         loop {
             let (mut buf2, mut args): (Self, RenderArgs) = rx.recv();
+            println!("{:?}\n", buf2);
             buf2.render( &mut render_resources, &mut args);
+            graphics_window.swap_buffers();
         }
     }
 }

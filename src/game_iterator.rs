@@ -103,7 +103,7 @@ impl<'a> GameEvent<'a> {
 
 enum GameIteratorState {
     RenderState,
-    SwapBuffersState,
+//    SwapBuffersState,
     PrepareUpdateLoopState,
     UpdateLoopState,
     HandleEventsState,
@@ -191,7 +191,7 @@ impl<'a, W: GameWindow> GameIterator<'a, W> {
                 let (w, h) = self.game_window.get_size();
                 if w != 0 && h != 0 {
                     // Swap buffers next time.
-                    self.state = SwapBuffersState;
+//                    self.state = SwapBuffersState;
                     return Some(Render(RenderArgs {
                             // Extrapolate time forward to allow smooth motion.
                             // 'start_render' is always bigger than 'last_update'.
@@ -206,11 +206,11 @@ impl<'a, W: GameWindow> GameIterator<'a, W> {
                 self.state = PrepareUpdateLoopState;
                 return self.next();
             },
-            SwapBuffersState => {
+/*            SwapBuffersState => {
                 self.game_window.swap_buffers();
                 self.state = PrepareUpdateLoopState;
                 return self.next();
-            },
+            },*/
             PrepareUpdateLoopState => {
                 self.updated = 0;
                 self.next_render = self.start_render + self.min_ns_per_frame;

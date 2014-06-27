@@ -12,6 +12,9 @@ extern crate collections;
 extern crate gl;
 extern crate time;
 
+extern crate debug;
+
+
 pub use Game = game::Game;
 
 pub use Render = game_iterator::Render;
@@ -36,8 +39,11 @@ pub use MouseMoveArgs = game_iterator::MouseMoveArgs;
 pub use MouseRelativeMoveArgs = game_iterator::MouseRelativeMoveArgs;
 
 pub use GameWindow = game_window::GameWindow;
+pub use GraphicsWindow = game_window::GraphicsWindow;
 #[cfg(sdl2)]
 pub use GameWindowSDL2 = game_window_sdl2::GameWindowSDL2;
+#[cfg(sdl2)]
+pub use GraphicsWindowSDL2 = game_window_sdl2::GraphicsWindowSDL2;
 #[cfg(glfw)]
 pub use GameWindowGLFW = game_window_glfw::GameWindowGLFW;
 pub use GameWindowSettings = game_window_settings::GameWindowSettings;

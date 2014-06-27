@@ -7,6 +7,7 @@ use sdl2;
 // Local crate.
 use game_window::{
     GameWindow,
+    GraphicsWindow,
 };
 use event;
 use game_window_settings::GameWindowSettings;
@@ -14,13 +15,23 @@ use keyboard;
 use mouse;
 use gl;
 
-/// A widow implemented by SDL2 back-end.
-pub struct GameWindowSDL2 {
+/// The graphics part of the window implemented by SDL2 back-end.
+pub struct GraphicsWindowSDL2 {
     window: sdl2::video::Window,
     // Allow dead code because this keeps track of the OpenGL context.
     // Will be released on drop.
     #[allow(dead_code)]
     context: sdl2::video::GLContext,
+}
+
+impl GraphicsWindow for GraphicsWindowSDL2 {
+    fn swap_buffers(&self) {
+        self.window.gl_swap_window();
+    }
+}
+
+/// A widow implemented by SDL2 back-end.
+pub struct GameWindowSDL2 {
     settings: GameWindowSettings,
     should_close: bool,
     last_pressed_key: Option<sdl2::keycode::KeyCode>,
@@ -28,7 +39,7 @@ pub struct GameWindowSDL2 {
 
 impl GameWindowSDL2 {
     /// Creates a new game window for SDL2.
-    pub fn new(settings: GameWindowSettings) -> GameWindowSDL2 {
+    pub fn new(settings: GameWindowSettings) -> (GameWindowSDL2, GraphicsWindowSDL2) {
         sdl2::video::gl_set_attribute(sdl2::video::GLContextMajorVersion, 3);
         sdl2::video::gl_set_attribute(sdl2::video::GLContextMinorVersion, 3);
         sdl2::video::gl_set_attribute(sdl2::video::GLContextProfileMask, sdl2::video::ll::SDL_GL_CONTEXT_PROFILE_CORE as int);
@@ -49,13 +60,17 @@ impl GameWindowSDL2 {
             std::mem::transmute(sdl2::video::gl_get_proc_address(s))
         });
 
-        GameWindowSDL2 {
-            window: window,
-            context: context,
-            settings: settings,
-            should_close: false,
-            last_pressed_key: None,
-        }
+        return (
+            GameWindowSDL2 {
+                settings: settings,
+                should_close: false,
+                last_pressed_key: None,
+            },
+            GraphicsWindowSDL2 {
+                window: window,
+                context: context,
+            }
+        );
     }
 }
 
@@ -66,10 +81,6 @@ impl GameWindow for GameWindowSDL2 {
 
     fn should_close(&self) -> bool {
         self.should_close
-    }
-
-    fn swap_buffers(&self) {
-        self.window.gl_swap_window();
     }
 
     fn poll_event(&mut self) -> event::Event {
